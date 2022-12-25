@@ -1109,9 +1109,9 @@ case = st.selectbox('Tipo de datos', ('IRIS', 'MNIST'))
 
 X, y = load_dataset(case=case)
 
-
+n_components = st.sidebar.slider('n_components', 2, 3, 2)
 perplexity = st.sidebar.slider('perplexity', 0, X.shape[1], 30)
-early_exaggeration = st.sidebar.slider('perplexity', 1, 50, 12)
+early_exaggeration = st.sidebar.slider('early_exaggeration', 1, 50, 12)
 learning_rate = st.sidebar.radio('learning_rate', ('warn', 'auto', 'other'))
 if learning_rate == 'other':
     learning_rate = st.sidebar.slider('learning_rate', 0, 1000, 200)
@@ -1120,7 +1120,12 @@ n_iter = st.sidebar.slider('n_iter', 250, 1000, 1000)
 n_iter_without_progress = st.sidebar.slider('n_iter_without_progress', 0, 1000, 300)
 init = st.sidebar.radio('init', ('random', 'pca'))
 random_state = st.sidebar.number_input('random_state', value=123456)
-method = st.sidebar.radio('method', ('barnes_hut', 'exact'))
+
+if case == 'MNIST':
+    method = 'barnes_hut'
+else:
+    method = st.sidebar.radio('method', ('barnes_hut', 'exact'))
+
 if method == 'barnes_hut':
     angle = st.sidebar.slider('angle', 0, 10, 5, format="%d%%")
     angle = angle / 10
@@ -1134,9 +1139,9 @@ if st.button('Ejecutar'):
 
     df = None
 
-    with st.spinner('Wait for it...'):
+    with st.spinner('Ejecutando'):
         tsne = TSNE(
-            n_components=2,
+            n_components=n_components,
             perplexity=perplexity,
             early_exaggeration=early_exaggeration,
             learning_rate=learning_rate,
@@ -1157,31 +1162,41 @@ if st.button('Ejecutar'):
         del tsne
 
         data_dfs = []
-        line_dfs = []
+        # line_dfs = []
         for enum, data in enumerate(list_params):
             if enum % 20 == 0:
-                _data = data.reshape(X.shape[0], 2)
-                _data = MinMaxScaler().fit_transform(_data)
-                _df = pd.DataFrame(_data, columns=['x', 'y'])
+                if n_components == 2:
+                    _data = data.reshape(X.shape[0], 2)
+                    _data = MinMaxScaler().fit_transform(_data)
+                    _df = pd.DataFrame(_data, columns=['x', 'y'])
+                else:
+                    _data = data.reshape(X.shape[0], 3)
+                    _data = MinMaxScaler().fit_transform(_data)
+                    _df = pd.DataFrame(_data, columns=['x', 'y', 'z'])
+
                 _df['target'] = y
                 _df['iter'] = enum
 
-                _line_df = pd.DataFrame(
-                    {
-                        'y': list_errors[:enum],
-                        'x': [x for x in range(enum)],
-                        'iter': enum
-                    }
-                )
+                # _line_df = pd.DataFrame(
+                #     {
+                #         'y': list_errors[:enum],
+                #         'x': [x for x in range(enum)],
+                #         'iter': enum
+                #     }
+                # )
 
                 data_dfs.append(_df)
-                line_dfs.append(_line_df)
+                # line_dfs.append(_line_df)
 
         df = pd.concat(data_dfs, axis=0)
-        line_df = pd.concat(line_dfs, axis=0)
+        df['target'] = df['target'].astype(str)
+        # line_df = pd.concat(line_dfs, axis=0)
 
-        del list_params, data, _df, X, y, data_dfs, line_dfs, _line_df
+        del list_params, data, _df, X, y, data_dfs#, line_dfs, _line_df
 
     if df is not None:
-        fig = px.scatter(df, x='x', y='y', animation_frame='iter', color='target')
+        if n_components == 2:
+            fig = px.scatter(df, x='x', y='y', animation_frame='iter', color='target', width=800, height=400)
+        else:
+            fig = px.scatter_3d(df, x='x', y='y', z='z', animation_frame='iter', color='target', width=1000, height=800)
         st.plotly_chart(fig)
