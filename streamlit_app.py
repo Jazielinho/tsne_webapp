@@ -1105,9 +1105,11 @@ def load_dataset(case):
 
 st.title('''TSNE''')
 
-case = st.selectbox('Tipo de datos', ('IRIS', 'MNIST'))
+case = st.selectbox('Conjunto de datos', ('IRIS', 'MNIST'))
 
 X, y = load_dataset(case=case)
+
+st.sidebar.title('''configura los parámetros ''')
 
 n_components = st.sidebar.slider('n_components', 2, 3, 2)
 perplexity = st.sidebar.slider('perplexity', 0, X.shape[1], 30)
