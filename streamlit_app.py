@@ -1113,15 +1113,14 @@ st.sidebar.title('''configura los parámetros ''')
 
 n_components = st.sidebar.slider('n_components', 2, 3, 2)
 perplexity = st.sidebar.slider('perplexity', 0, X.shape[1], 30)
-early_exaggeration = st.sidebar.slider('early_exaggeration', 1, 50, 12)
-learning_rate = st.sidebar.radio('learning_rate', ('warn', 'auto', 'other'))
+learning_rate = st.sidebar.radio('learning_rate', ('auto', 'other'))
 if learning_rate == 'other':
     learning_rate = st.sidebar.slider('learning_rate', 0, 1000, 200)
-metric = st.sidebar.radio('metric', ('euclidean', 'cosine', 'manhattan'))
+metric = st.sidebar.selectbox('metric', ('euclidean', 'cosine', 'manhattan'))
 n_iter = st.sidebar.slider('n_iter', 250, 1000, 1000)
+early_exaggeration = st.sidebar.slider('early_exaggeration', 1, 50, 12)
 n_iter_without_progress = st.sidebar.slider('n_iter_without_progress', 0, 1000, 300)
-init = st.sidebar.radio('init', ('random', 'pca'))
-random_state = st.sidebar.number_input('random_state', value=123456)
+init = st.sidebar.selectbox('init', ('pca', 'random'))
 
 if case == 'MNIST':
     method = 'barnes_hut'
@@ -1133,6 +1132,8 @@ if method == 'barnes_hut':
     angle = angle / 10
 else:
     angle = 0.5
+
+random_state = st.sidebar.number_input('random_state', value=123456)
 
 min_grad_norm = 1e-7
 
